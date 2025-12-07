@@ -3,10 +3,10 @@
 // @description  Adds URLs to CGC certs on the inventory page.
 // @author       joshmcorreia
 // @match        https://www.cgccards.com/registry/trading-cards/profile/*
-// @run-at       document-end
+// @run-at       document-start
 // @grant        none
 // @license      MIT
-// @version      0.0.1
+// @version      1.0.0
 // @namespace    https://greasyfork.org/users/1220845
 // ==/UserScript==
 

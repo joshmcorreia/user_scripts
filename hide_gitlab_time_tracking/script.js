@@ -2,8 +2,9 @@
 // @name        Hide GitLab time tracking
 // @namespace   Violentmonkey Scripts
 // @match       https://gitlab.example.com/*/*/-/merge_requests/*
+// @run-at      document-start
 // @grant       none
-// @version     1.0.0
+// @version     1.0.1
 // @author      joshmcorreia
 // @license     MIT
 // @description Hide GitLab time tracking

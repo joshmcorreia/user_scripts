@@ -3,8 +3,9 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://www.ebay.com/itm/*
 // @match       https://www.ebay.com/sch/*
+// @run-at      document-start
 // @grant       none
-// @version     1.0.1
+// @version     1.0.2
 // @author      joshmcorreia
 // @license     MIT
 // @description Hides the "Live Streaming Now" widget at the top of the page.
@@ -32,10 +33,16 @@ if (window.location.href.indexOf("ebay.com/sch/") != -1) {
 	(new MutationObserver(observe_shop_ebay_live_element)).observe(document, {childList: true, subtree: true});
 }
 
+var num_times_triggered = 0;
 function observe_live_streaming_now(changes, observer) {
 	if(document.querySelector(live_streaming_now_element_selector)) {
-		observer.disconnect();
+		num_times_triggered += 1;
 		remove_live_streaming_now_widget();
+		// The live steaming popup comes up twice for some reason, so we need to remove both
+		// before disconnecting the observer.
+		if (num_times_triggered == 2) {
+			observer.disconnect();
+		}
 	}
 }
 

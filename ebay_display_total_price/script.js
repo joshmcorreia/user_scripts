@@ -16,6 +16,7 @@
 
 // TODO: Support active bids breaking the price of the item.
 
+const shipping_element_selector = ".d-shipping-minview";
 const price_element_selector = ".x-price-section";
 const BIN_price_element_selector = ".x-bin-price"
 
@@ -147,7 +148,7 @@ function rewrite_BIN_section(total_BIN_price_html_after_edit) {
 
 let total_BIN_price_html_after_edit = "";
 function observe_price_loading(changes, observer) {
-	if(document.querySelector(price_element_selector)) {
+	if(document.querySelector(price_element_selector) && document.querySelector(shipping_element_selector)) {
 		observer.disconnect();
 
 		let primary_BIN_price = get_primary_BIN_price();

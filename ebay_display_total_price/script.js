@@ -198,11 +198,12 @@ function observe_price_loading(changes, observer) {
 			// can overwrite eBay changing the page
 			total_BIN_price_html_after_edit = document.querySelector(BIN_price_element_selector).innerHTML;
 
-			// eBay has some code in place that re-writes the price multiple times when the page loads
-			// for some reason, and it ends up cloning the price element... That means that when I try
-			// to change the color and add ids, the original price element ends up getting them too!?!
-			// I originally thought it was to prevent scripts from editing the price on the page, but
-			// they're re-written regardless of if the element is edited or not so that doesn't make sense
+			// eBay has some code in place that dynamically re-writes the price elements multiple times
+			// when the page loads and it ends up cloning the price element... That means that when I try
+			// to change the color and add ids, the original price element ends up getting them too...
+			// eBay appears to be using a templating language (you'll notice things like <!-- F/ -->) that
+			// gets replaced as it retrieves information from the API. More information can be found at
+			// https://innovation.ebayinc.com/stories/async-fragments-rediscovering-progressive-html-rendering-with-marko
 			observeDOM(() => rewrite_BIN_section(total_BIN_price_html_after_edit), document.querySelector(BIN_price_element_selector));
 		}
 

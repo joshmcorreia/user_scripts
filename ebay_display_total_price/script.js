@@ -198,9 +198,11 @@ function observe_price_loading(changes, observer) {
 			// can overwrite eBay changing the page
 			total_BIN_price_html_after_edit = document.querySelector(BIN_price_element_selector).innerHTML;
 
-			// eBay has some code in place that re-writes the price multiple times for some reason. I
-			// originally thought it was to prevent scripts from editing the price on the page but
-			// they're re-written regardless of if the element is edited or not.
+			// eBay has some code in place that re-writes the price multiple times when the page loads
+			// for some reason, and it ends up cloning the price element... That means that when I try
+			// to change the color and add ids, the original price element ends up getting them too!?!
+			// I originally thought it was to prevent scripts from editing the price on the page, but
+			// they're re-written regardless of if the element is edited or not so that doesn't make sense
 			observeDOM(() => rewrite_BIN_section(total_BIN_price_html_after_edit), document.querySelector(BIN_price_element_selector));
 		}
 

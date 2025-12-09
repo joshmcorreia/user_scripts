@@ -23,7 +23,9 @@ const BIN_price_element_selector = ".x-bin-price"
  * @returns {*}
  */
 function get_dollar_amount_from_string(input_string) {
-	if (input_string == "Free") {
+	// We can't check if the string is exactly equal to "Free" because sometimes
+	// it will be "Free delivery - Arrives before Christmas"
+	if (input_string.includes("Free")) {
 		return 0;
 	}
 	input_string = input_string.replace(/,/g, ''); // remove the commas from large numbers
@@ -85,7 +87,7 @@ function get_shipping_price() {
 	let primary_shipping_price_approximate = document.querySelector(".d-shipping-minview .ux-labels-values--shipping .ux-labels-values__values .ux-textspans--SECONDARY.ux-textspans--BOLD")?.textContent;
 	let shipping_price = primary_shipping_price_approximate || primary_shipping_price;
 	if (shipping_price != null) {
-		shipping_price = get_dollar_amount_from_string(shipping_price);
+		return get_dollar_amount_from_string(shipping_price);
 	}
 	// Local pickup only
 	return 0;

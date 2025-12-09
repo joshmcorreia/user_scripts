@@ -103,9 +103,6 @@ function get_shipping_price() {
  * @returns {String}
  */
 function get_total_price(item_price, shipping_price) {
-	if (item_price === undefined) {
-		return undefined;
-	}
 	let total_price = item_price + shipping_price;
 	total_price = (Math.round(total_price * 100) / 100).toFixed(2); // always show 2 decimals
 	total_price = add_comma_to_dollar_amount(total_price);
@@ -189,23 +186,22 @@ function observe_price_loading(changes, observer) {
 	if(document.querySelector(price_element_selector) && document.querySelector(shipping_element_selector)) {
 		observer.disconnect();
 
+		// The shipping price doesn't change so we can get it up front
 		let shipping_price = get_shipping_price();
 
 		if (document.querySelector(BIN_price_element_selector)) {
 			let primary_BIN_price = get_primary_BIN_price();
 			let total_BIN_price = get_total_price(primary_BIN_price, shipping_price);
-			if (total_BIN_price !== undefined) {
-				add_total_BIN_price_to_page(total_BIN_price);
+			add_total_BIN_price_to_page(total_BIN_price);
 
-				// Now that we edited the BIN price, we need to save a copy of the HTML so we
-				// can overwrite eBay changing the page
-				total_BIN_price_html_after_edit = document.querySelector(BIN_price_element_selector).innerHTML;
+			// Now that we edited the BIN price, we need to save a copy of the HTML so we
+			// can overwrite eBay changing the page
+			total_BIN_price_html_after_edit = document.querySelector(BIN_price_element_selector).innerHTML;
 
-				// eBay has some code in place that re-writes the price multiple times for some reason. I
-				// originally thought it was to prevent scripts from editing the price on the page but
-				// they're re-written regardless of if the element is edited or not.
-				observeDOM(() => rewrite_BIN_section(total_BIN_price_html_after_edit), document.querySelector(BIN_price_element_selector));
-			}
+			// eBay has some code in place that re-writes the price multiple times for some reason. I
+			// originally thought it was to prevent scripts from editing the price on the page but
+			// they're re-written regardless of if the element is edited or not.
+			observeDOM(() => rewrite_BIN_section(total_BIN_price_html_after_edit), document.querySelector(BIN_price_element_selector));
 		}
 
 		if (document.querySelector(bid_price_element_selector)) {

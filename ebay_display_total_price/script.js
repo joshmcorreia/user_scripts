@@ -12,8 +12,6 @@
 
 // GitHub repo can be found at https://github.com/joshmcorreia/user_scripts
 
-// NOTE: Does not support "Local pickup only" by design. If you want to pick items up locally you probably shouldn't be using eBay.
-
 // TODO: Support active bids breaking the price of the item.
 
 const shipping_element_selector = ".d-shipping-minview";
@@ -86,8 +84,11 @@ function get_shipping_price() {
 	let primary_shipping_price = document.querySelector(".d-shipping-minview .ux-labels-values--shipping .ux-labels-values__values .ux-textspans")?.textContent;
 	let primary_shipping_price_approximate = document.querySelector(".d-shipping-minview .ux-labels-values--shipping .ux-labels-values__values .ux-textspans--SECONDARY.ux-textspans--BOLD")?.textContent;
 	let shipping_price = primary_shipping_price_approximate || primary_shipping_price;
-	shipping_price = get_dollar_amount_from_string(shipping_price);
-	return shipping_price;
+	if (shipping_price != null) {
+		shipping_price = get_dollar_amount_from_string(shipping_price);
+	}
+	// Local pickup only
+	return 0;
 }
 
 /**

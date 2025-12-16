@@ -18,7 +18,10 @@
 // price element show up while the page is loading, but it beats trying to undo all of
 // eBay's element changes.
 
-// TODO: Support active bids breaking the price of the item.
+const price_element_selector = ".x-price-section";
+const bid_price_element_selector = ".x-bid-price .x-price-primary .ux-textspans";
+const bid_price_approx_element_selector = ".x-bid-price .x-price-approx__price";
+const import_price_selector = ".ux-labels-values--importCharges .ux-textspans--BOLD";
 
 /**
  * @param {String} input_string
@@ -73,7 +76,7 @@ function get_primary_BIN_price() {
  */
 function get_primary_bid_price() {
 	let primary_bid_price = document.querySelector(".x-bid-price .x-price-primary")?.textContent;
-	let approximate_primary_bid_price = document.querySelector(".x-bid-price .x-price-approx__price")?.textContent;
+	let approximate_primary_bid_price = document.querySelector(bid_price_approx_element_selector)?.textContent;
 	let bid_price = approximate_primary_bid_price || primary_bid_price;
 	if (bid_price) {
 		bid_price = get_dollar_amount_from_string(bid_price);
@@ -95,16 +98,24 @@ function get_shipping_price() {
 	return 0;
 }
 
+function get_import_price() {
+	let import_price_text = document.querySelector(import_price_selector)?.textContent;
+	if (import_price_text != null) {
+		return get_dollar_amount_from_string(import_price_text);
+	}
+	return 0;
+}
+
 /**
  * @param {Number} item_price
  * @param {Number} shipping_price
  * @returns {String}
  */
-function get_total_price(item_price, shipping_price) {
+function get_total_price(item_price, shipping_price, import_price) {
 	if (item_price === undefined) {
 		return undefined;
 	}
-	let total_price = item_price + shipping_price;
+	let total_price = item_price + shipping_price + import_price;
 	total_price = (Math.round(total_price * 100) / 100).toFixed(2); // always show 2 decimals
 	total_price = add_comma_to_dollar_amount(total_price);
 	return total_price;
@@ -118,8 +129,15 @@ function add_total_bid_price_to_page(total_bid_price) {
 	let total_bid_price_div = document.createElement('div');
 	total_bid_price_div.style = "color:DodgerBlue";
 	total_bid_price_div.className = "x-price-primary";
+	total_bid_price_div.id = "total_bid_price";
 	total_bid_price_div.textContent = `US $${total_bid_price}`;
 	document.querySelector(".x-price-section").prepend(total_bid_price_div);
+	return;
+}
+
+function update_total_bid_price(total_bid_price) {
+	let total_bid_price_element = document.querySelector('#total_bid_price');
+	total_bid_price_element.textContent = `US $${total_bid_price}`;
 	return;
 }
 
@@ -131,6 +149,7 @@ function add_total_BIN_price_to_page(total_BIN_price) {
 	let total_BIN_price_div = document.createElement('div');
 	total_BIN_price_div.style = "color:green";
 	total_BIN_price_div.className = "x-price-primary";
+	total_BIN_price_div.id = "total_BIN_price";
 	total_BIN_price_div.textContent = `US $${total_BIN_price}`;
 	document.querySelector(".x-bin-price__content").prepend(document.createElement('br'));
 	document.querySelector(".x-bin-price__content").prepend(total_BIN_price_div);
@@ -140,13 +159,12 @@ function add_total_BIN_price_to_page(total_BIN_price) {
 /**
  * @returns {}
  */
-function add_total_price_to_page() {
+function add_total_price_to_page(shipping_price, import_price) {
 	let primary_BIN_price = get_primary_BIN_price()
 	let primary_bid_price = get_primary_bid_price()
-	let shipping_price = get_shipping_price()
 
-	let total_BIN_price = get_total_price(primary_BIN_price, shipping_price);
-	let total_bid_price = get_total_price(primary_bid_price, shipping_price);
+	let total_BIN_price = get_total_price(primary_BIN_price, shipping_price, import_price);
+	let total_bid_price = get_total_price(primary_bid_price, shipping_price, import_price);
 
 	if (total_BIN_price !== undefined) {
 		add_total_BIN_price_to_page(total_BIN_price)
@@ -156,4 +174,40 @@ function add_total_price_to_page() {
 	}
 }
 
-add_total_price_to_page();
+function document_observer(changes, observer) {
+	if(document.querySelector(price_element_selector)) {
+		// disconnect the observer once the price section loads
+		observer.disconnect();
+
+		// The shipping price and import price don't change dynamically so we can get them
+		// when the page loads
+		let shipping_price = get_shipping_price();
+		let import_price = get_import_price();
+		console.log(`Shipping price: ${shipping_price}`);
+		console.log(`Import price: ${import_price}`);
+		add_total_price_to_page(shipping_price, import_price);
+
+		if (document.querySelector(bid_price_element_selector)) {
+			const price_observer = new MutationObserver(function(mutationsList) {
+				for (const mutation of mutationsList) {
+					if (mutation.type == "characterData") {
+						let primary_bid_price = get_primary_bid_price();
+						let total_bid_price = get_total_price(primary_bid_price, shipping_price, import_price);
+						if (total_bid_price !== undefined) {
+							update_total_bid_price(total_bid_price);
+						}
+					}
+				}
+			});
+
+			// observe changes to the bid price
+			price_observer.observe(document.querySelector(bid_price_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
+
+			// observe changes to the approximate price for currency conversion, this updates dynamically every few seconds
+			// or whenever you change tabs
+			price_observer.observe(document.querySelector(bid_price_approx_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
+		}
+	}
+}
+
+(new MutationObserver(document_observer)).observe(document, config = { childList: true, subtree: true });

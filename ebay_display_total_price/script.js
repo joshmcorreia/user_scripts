@@ -6,14 +6,17 @@
 // @run-at       document-end
 // @grant        none
 // @license      MIT
-// @version      0.0.1
+// @version      0.0.2
 // @namespace    https://greasyfork.org/users/1220845
 // @noframes
 // ==/UserScript==
 
 // GitHub repo can be found at https://github.com/joshmcorreia/user_scripts
 
-// NOTE: Does not support "Local pickup only" by design. If you want to pick items up locally you probably shouldn't be using eBay.
+// It's awful to try to hook the document at document-start since eBay does a bunch
+// of dynamic page rewriting, so I use document-end instead. This does make the total
+// price element show up while the page is loading, but it beats trying to undo all of
+// eBay's element changes.
 
 // TODO: Support active bids breaking the price of the item.
 
@@ -22,7 +25,9 @@
  * @returns {*}
  */
 function get_dollar_amount_from_string(input_string) {
-	if (input_string == "Free") {
+	// We can't check if the string is exactly equal to "Free" because sometimes
+	// it will be "Free delivery - Arrives before Christmas"
+	if (input_string.includes("Free")) {
 		return 0;
 	}
 	input_string = input_string.replace(/,/g, ''); // remove the commas from large numbers
@@ -83,8 +88,11 @@ function get_shipping_price() {
 	let primary_shipping_price = document.querySelector(".d-shipping-minview .ux-labels-values--shipping .ux-labels-values__values .ux-textspans")?.textContent;
 	let primary_shipping_price_approximate = document.querySelector(".d-shipping-minview .ux-labels-values--shipping .ux-labels-values__values .ux-textspans--SECONDARY.ux-textspans--BOLD")?.textContent;
 	let shipping_price = primary_shipping_price_approximate || primary_shipping_price;
-	shipping_price = get_dollar_amount_from_string(shipping_price);
-	return shipping_price;
+	if (shipping_price != null) {
+		return get_dollar_amount_from_string(shipping_price);
+	}
+	// Local pickup only
+	return 0;
 }
 
 /**
@@ -111,7 +119,6 @@ function add_total_bid_price_to_page(total_bid_price) {
 	total_bid_price_div.style = "color:DodgerBlue";
 	total_bid_price_div.className = "x-price-primary";
 	total_bid_price_div.textContent = `US $${total_bid_price}`;
-	document.querySelector(".x-price-section").prepend(document.createElement('br'));
 	document.querySelector(".x-price-section").prepend(total_bid_price_div);
 	return;
 }

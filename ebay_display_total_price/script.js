@@ -18,7 +18,7 @@
 // price element show up while the page is loading, but it beats trying to undo all of
 // eBay's element changes.
 
-// TODO: Support active bids breaking the price of the item.
+const bid_price_element_selector = ".x-bid-price .x-price-primary .ux-textspans";
 
 /**
  * @param {String} input_string
@@ -118,8 +118,15 @@ function add_total_bid_price_to_page(total_bid_price) {
 	let total_bid_price_div = document.createElement('div');
 	total_bid_price_div.style = "color:DodgerBlue";
 	total_bid_price_div.className = "x-price-primary";
+	total_bid_price_div.id = "total_bid_price";
 	total_bid_price_div.textContent = `US $${total_bid_price}`;
 	document.querySelector(".x-price-section").prepend(total_bid_price_div);
+	return;
+}
+
+function update_total_bid_price(total_bid_price) {
+	let total_bid_price_element = document.querySelector('#total_bid_price');
+	total_bid_price_element.textContent = `US $${total_bid_price}`;
 	return;
 }
 
@@ -131,6 +138,7 @@ function add_total_BIN_price_to_page(total_BIN_price) {
 	let total_BIN_price_div = document.createElement('div');
 	total_BIN_price_div.style = "color:green";
 	total_BIN_price_div.className = "x-price-primary";
+	total_BIN_price_div.id = "total_BIN_price";
 	total_BIN_price_div.textContent = `US $${total_BIN_price}`;
 	document.querySelector(".x-bin-price__content").prepend(document.createElement('br'));
 	document.querySelector(".x-bin-price__content").prepend(total_BIN_price_div);
@@ -143,7 +151,6 @@ function add_total_BIN_price_to_page(total_BIN_price) {
 function add_total_price_to_page() {
 	let primary_BIN_price = get_primary_BIN_price()
 	let primary_bid_price = get_primary_bid_price()
-	let shipping_price = get_shipping_price()
 
 	let total_BIN_price = get_total_price(primary_BIN_price, shipping_price);
 	let total_bid_price = get_total_price(primary_bid_price, shipping_price);
@@ -156,4 +163,27 @@ function add_total_price_to_page() {
 	}
 }
 
+function document_observer(changes, observer) {
+	if(document.querySelector(bid_price_element_selector)) {
+		// wait for the bid section to load
+		observer.disconnect();
+
+		const bid_observer = new MutationObserver(function(mutationsList) {
+			for (const mutation of mutationsList) {
+				if (mutation.type == "characterData") {
+					let primary_bid_price = get_primary_bid_price();
+					let total_bid_price = get_total_price(primary_bid_price, shipping_price);
+					if (total_bid_price !== undefined) {
+						update_total_bid_price(total_bid_price);
+					}
+				}
+			}
+		});
+		// We need to observe the parent of the prices in order to detect that the nodes are removed
+		bid_observer.observe(document.querySelector(bid_price_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
+	}
+}
+
+let shipping_price = get_shipping_price();
 add_total_price_to_page();
+(new MutationObserver(document_observer)).observe(document, config = { childList: true, subtree: true });

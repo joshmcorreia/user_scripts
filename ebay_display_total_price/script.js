@@ -19,6 +19,7 @@
 // eBay's element changes.
 
 const bid_price_element_selector = ".x-bid-price .x-price-primary .ux-textspans";
+const bid_price_approx_element_selector = ".x-bid-price .x-price-approx__price";
 
 /**
  * @param {String} input_string
@@ -73,7 +74,7 @@ function get_primary_BIN_price() {
  */
 function get_primary_bid_price() {
 	let primary_bid_price = document.querySelector(".x-bid-price .x-price-primary")?.textContent;
-	let approximate_primary_bid_price = document.querySelector(".x-bid-price .x-price-approx__price")?.textContent;
+	let approximate_primary_bid_price = document.querySelector(bid_price_approx_element_selector)?.textContent;
 	let bid_price = approximate_primary_bid_price || primary_bid_price;
 	if (bid_price) {
 		bid_price = get_dollar_amount_from_string(bid_price);
@@ -168,7 +169,7 @@ function document_observer(changes, observer) {
 		// wait for the bid section to load
 		observer.disconnect();
 
-		const bid_observer = new MutationObserver(function(mutationsList) {
+		const price_observer = new MutationObserver(function(mutationsList) {
 			for (const mutation of mutationsList) {
 				if (mutation.type == "characterData") {
 					let primary_bid_price = get_primary_bid_price();
@@ -179,8 +180,13 @@ function document_observer(changes, observer) {
 				}
 			}
 		});
-		// We need to observe the parent of the prices in order to detect that the nodes are removed
-		bid_observer.observe(document.querySelector(bid_price_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
+
+		// observe changes to the bid price
+		price_observer.observe(document.querySelector(bid_price_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
+
+		// observe changes to the approximate price for currency conversion, this updates dynamically every few seconds
+		// or whenever you change tabs
+		price_observer.observe(document.querySelector(bid_price_approx_element_selector), config = { characterData: true, attributes: true, childList: true, subtree: true });
 	}
 }
 

@@ -6,7 +6,7 @@
 // @run-at       document-start
 // @grant        none
 // @license      MIT
-// @version      1.0.0
+// @version      1.0.1
 // @namespace    https://greasyfork.org/users/1220845
 // @noframes
 // ==/UserScript==
@@ -19,7 +19,7 @@ var RED_FEEDBACK_THRESHHOLD=0;
 var ORANGE_FEEDBACK_THRESHHOLD=10;
 
 function get_feedback_number() {
-	let feedback_number_string = document.querySelector(".x-sellercard-atf .x-sellercard-atf__info__about-seller .x-sellercard-atf__about-seller .ux-textspans")?.textContent;
+	let feedback_number_string = document.querySelector(".x-sellercard-atf .x-sellercard-atf__info__about-seller .x-sellercard-atf__about-seller .ux-textspans--SECONDARY")?.textContent;
 	let int_regex = /\d+/;
 	let feedback_number = feedback_number_string.match(int_regex);
 	return feedback_number;
